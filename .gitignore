@@ -1,0 +1,6 @@
+*.pyc
+.DS_Store
+example/db.sqlite3
+build
+dist
+*.egg-info
