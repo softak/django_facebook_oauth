@@ -9,10 +9,20 @@ from facebook.models import FacebookProfile
 class FacebookBackend:
     def authenticate(self, token=None, request=None):
         """ Reads in a Facebook code and asks Facebook if it's valid and what user it points to. """
+        
+        redirect_uri = request.build_absolute_uri('/facebook/authentication_callback')
+        redirect_args = {}
+        if request.GET.get('next'):
+            redirect_args['next'] = request.GET.get('next')            
+        if request.GET.get('user'): 
+            redirect_args['user'] = str(request.user.id)
+        
+        redirect_uri = redirect_uri + '?' + urllib.urlencode(redirect_args)
+        
         args = {
             'client_id': settings.FACEBOOK_APP_ID,
             'client_secret': settings.FACEBOOK_APP_SECRET,
-            'redirect_uri': request.build_absolute_uri('/facebook/authentication_callback'),
+            'redirect_uri': redirect_uri,
             'code': token,
         }
 
@@ -24,7 +34,28 @@ class FacebookBackend:
         # Read the user's profile information
         fb_profile = urllib.urlopen('https://graph.facebook.com/me?access_token=%s' % access_token)
         fb_profile = json.load(fb_profile)
-
+        
+        #if user is just trying to connect facebook not full login
+        if request.GET.get('user'):
+            user = request.user
+            try:
+                # Try and find existing user
+                fb_user = FacebookProfile.objects.get(facebook_id=fb_profile['id'])
+                user = fb_user.user
+                
+                if request.user is not user:                    
+                    return None                
+                
+            except FacebookProfile.DoesNotExist:
+                fb_user = FacebookProfile(
+                        user=user,
+                        facebook_id=fb_profile['id'],
+                        access_token=access_token
+                )                
+                fb_user.save()
+            return user                
+        
+        #full login
         try:
             # Try and find existing user
             fb_user = FacebookProfile.objects.get(facebook_id=fb_profile['id'])

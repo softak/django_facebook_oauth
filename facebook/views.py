@@ -9,14 +9,23 @@ from django.shortcuts import redirect, render
 
 def login(request):
     """ First step of process, redirects user to facebook, which redirects to authentication_callback. """
-
+    
+    redirect_uri = request.build_absolute_uri('/facebook/authentication_callback')
+    redirect_args = {}
+    if request.GET.get('next'):
+        redirect_args['next'] = request.GET.get('next')            
+    if request.GET.get('user'): 
+        redirect_args['user'] = str(request.user.id)
+        
+    redirect_uri = redirect_uri + '?' + urllib.urlencode(redirect_args)
+            
     args = {
         'client_id': settings.FACEBOOK_APP_ID,
         'scope': settings.FACEBOOK_SCOPE,
-        'redirect_uri': request.build_absolute_uri('/facebook/authentication_callback'),
+        'redirect_uri': redirect_uri,
+        #'response_type': 'token'
     }
     return HttpResponseRedirect('https://www.facebook.com/dialog/oauth?' + urllib.urlencode(args))
-
 
 def verification(request, template_name=None, authentication_form=None, redirect_url=None):
     code = request.GET.get('code')
@@ -49,6 +58,15 @@ def authentication_callback(request):
     It reads in a code from Facebook, then redirects back to the home page. """
     code = request.GET.get('code')
     user = authenticate(token=code, request=request)
+    
+    if request.GET.get('user'):        
+        url = reverse('profiles.notification_settings')
+        
+        if user is None:
+            url += "?error=%s" % "Not Match Facebook User"
+                        
+        resp = HttpResponseRedirect(url)        
+        return resp
 
     if user.is_anonymous():
         if user.verification_required:

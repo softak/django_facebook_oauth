@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class FacebookProfile(models.Model):
     user = models.OneToOneField(User)
     facebook_id = models.BigIntegerField()
-    access_token = models.CharField(max_length=150)
+    access_token = models.CharField(max_length=300)
 
     def get_facebook_profile(self):
         fb_profile = urllib.urlopen('https://graph.facebook.com/me?access_token=%s' % self.access_token)
