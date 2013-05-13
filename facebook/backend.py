@@ -10,6 +10,7 @@ class FacebookBackend:
     def authenticate(self, token=None, request=None):
         """ Reads in a Facebook code and asks Facebook if it's valid and what user it points to. """
         
+        #rebuild redirect_uri for user id or next url
         redirect_uri = request.build_absolute_uri('/facebook/authentication_callback')
         redirect_args = {}
         if request.GET.get('next'):
@@ -17,7 +18,8 @@ class FacebookBackend:
         if request.GET.get('user'): 
             redirect_args['user'] = str(request.user.id)
         
-        redirect_uri = redirect_uri + '?' + urllib.urlencode(redirect_args)
+        if len(redirect_args) != 0:
+            redirect_uri = redirect_uri + '?' + urllib.urlencode(redirect_args)
         
         args = {
             'client_id': settings.FACEBOOK_APP_ID,
@@ -43,7 +45,7 @@ class FacebookBackend:
                 fb_user = FacebookProfile.objects.get(facebook_id=fb_profile['id'])
                 user = fb_user.user
                 
-                if request.user is not user:                    
+                if request.user.id != user.id:                    
                     return None                
                 
             except FacebookProfile.DoesNotExist:

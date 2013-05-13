@@ -5,9 +5,9 @@ setup(
     version='2.0',
     description="Facebook OAuth2 authentication for Django.",
     long_description=open('README.markdown').read(),
-    author='Jeff Dickey',
-    author_email='me@jeffdickey.info',
-    url='https://github.com/dickeytk/django_facebook_oauth',
+    author='Terry W',
+    author_email='me@terry.info',
+    url='https://github.com/terry9/django_facebook_oauth',
     packages=['facebook'],
     package_dir={'facebook': 'facebook'},
     classifiers=[

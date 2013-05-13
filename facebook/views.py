@@ -10,14 +10,16 @@ from django.shortcuts import redirect, render
 def login(request):
     """ First step of process, redirects user to facebook, which redirects to authentication_callback. """
     
+    #rebuild redirect_uri for user id or next url
     redirect_uri = request.build_absolute_uri('/facebook/authentication_callback')
     redirect_args = {}
     if request.GET.get('next'):
         redirect_args['next'] = request.GET.get('next')            
     if request.GET.get('user'): 
         redirect_args['user'] = str(request.user.id)
-        
-    redirect_uri = redirect_uri + '?' + urllib.urlencode(redirect_args)
+    
+    if len(redirect_args) != 0:
+        redirect_uri = redirect_uri + '?' + urllib.urlencode(redirect_args)
             
     args = {
         'client_id': settings.FACEBOOK_APP_ID,
